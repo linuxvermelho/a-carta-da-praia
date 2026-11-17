@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#070914">
+<title>Entre instantes</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&display=swap');
+:root{--ink:#f2eee8;--muted:#aaa9b7;--accent:#c6a7e8;--bg:#070914}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif}
+body{cursor:default}
+#universe{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0}
+#veil{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 50% 48%,transparent 15%,rgba(3,5,14,.16) 62%,rgba(2,3,9,.72) 100%);transition:background 2s}
+.grain{position:fixed;inset:-50%;z-index:2;pointer-events:none;opacity:.075;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.45'/%3E%3C/svg%3E");animation:grain .25s steps(2) infinite}
+@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(2%,-1%)}50%{transform:translate(-1%,2%)}75%{transform:translate(1%,1%)}100%{transform:translate(-2%,-1%)}}
+header{position:fixed;z-index:5;top:0;left:0;right:0;padding:25px 34px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+.brand,.tools{font:10px 'DM Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#c4c1ce}
+.brand span{color:var(--accent)}
+.tools{display:flex;gap:18px;align-items:center;pointer-events:auto}
+.tool{border:0;background:transparent;color:#c4c1ce;font:10px 'DM Mono',monospace;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;padding:8px}
+.tool:hover{color:white}
+#progress{position:fixed;z-index:5;bottom:0;left:0;height:2px;width:0;background:linear-gradient(90deg,#a18ad8,#e8c5bd);transition:width 1s}
+main{position:relative;z-index:3;width:100%;height:100%;display:grid;place-items:center;padding:90px 24px 100px}
+#composition{width:min(900px,100%);min-height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative}
+.kicker{font:10px 'DM Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-bottom:27px;opacity:0;transform:translateY(10px);transition:opacity 1s,transform 1s,color .6s,border-color .6s,background .6s}
+.kicker.highlighted{color:#f6decb;padding:6px 14px;border-radius:100px;border:1px solid rgba(246,222,203,.4);background:rgba(232,197,189,.12);box-shadow:0 0 24px rgba(232,197,189,.2)}
+#message{font-family:'Playfair Display',serif;font-size:clamp(22px,3.6vw,44px);line-height:1.26;font-weight:400;letter-spacing:-.025em;max-width:850px;text-wrap:balance;text-shadow:0 4px 35px #070914aa;opacity:0;transform:translateY(22px);transition:opacity 1.15s ease,transform 1.15s cubic-bezier(.2,.7,.2,1),color .8s,text-shadow .8s}
+#message.highlighted{color:#f6decb;text-shadow:0 0 38px rgba(232,197,189,.55),0 4px 35px #070914aa}
+#message.visible{opacity:1;transform:translateY(0)}
+#message.leaving{opacity:0;transform:translateY(-16px);filter:blur(5px)}
+.kicker.visible{opacity:1;transform:translateY(0)}
+#submessage{font-size:clamp(14px,1.55vw,17px);font-weight:300;line-height:1.8;color:#c4c2cc;max-width:680px;margin-top:24px;opacity:0;transition:opacity 1s .25s}
+#submessage.visible{opacity:.88}
+#choices{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:35px;opacity:0;transform:translateY(12px);transition:opacity .8s,transform .8s;pointer-events:none}
+#choices.visible{opacity:1;transform:translateY(0);pointer-events:auto}
+.choice{border:1px solid #ffffff55;background:#0d1024aa;color:#f4eff7;padding:13px 21px;border-radius:100px;font:12px 'DM Sans',sans-serif;letter-spacing:.02em;cursor:pointer;backdrop-filter:blur(12px);transition:background .3s,border .3s,transform .3s}
+.choice:hover{background:#ffffff20;border-color:#e4c9ff;transform:translateY(-3px)}
+#hint{position:fixed;z-index:4;bottom:34px;left:50%;transform:translateX(-50%);font:9px 'DM Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#aaa9b7;opacity:0;transition:opacity .8s;white-space:nowrap;pointer-events:none}
+#hint.visible{opacity:.75}
+#scene-note{position:fixed;z-index:4;right:32px;bottom:30px;font:9px 'DM Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#777b91;opacity:.7}
+#start{position:fixed;inset:0;z-index:10;background:#050711;display:grid;place-items:center;text-align:center;padding:25px;transition:opacity 1.5s,visibility 1.5s}
+#start.hide{opacity:0;visibility:hidden}
+.start-inner{max-width:600px}
+.start-overline{font:10px 'DM Mono',monospace;letter-spacing:.25em;color:#a8a2b7;text-transform:uppercase;margin-bottom:30px}
+.start-title{font:italic 400 clamp(42px,8vw,86px)/1.05 'Playfair Display',serif;color:#f0e8e5;margin:0}
+.start-copy{color:#aaa9b7;font-size:13px;font-weight:300;line-height:1.8;margin:24px auto 32px;max-width:390px}
+#begin{border:1px solid #b9a2d7;background:transparent;color:#eee4f8;padding:14px 25px;border-radius:100px;font:10px 'DM Mono',monospace;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;transition:.3s}
+#begin:hover{background:#b9a2d722;box-shadow:0 0 35px #9b78d955}
+#ending{font-size:clamp(15px,2vw,20px)!important;font-family:'DM Sans',sans-serif!important;font-weight:300!important;letter-spacing:.01em!important;line-height:1.8!important}
+@media(max-width:600px){header{padding:19px 17px}.tools{gap:3px}.tool{font-size:9px;padding:7px 4px}main{padding:80px 23px 90px}#scene-note{right:15px;bottom:17px;font-size:8px}#hint{bottom:48px;font-size:8px}.choice{padding:12px 16px}}
+</style>
+</head>
+<body>
+<canvas id="universe"></canvas><div id="veil"></div><div class="grain"></div>
+<header><div class="brand">ENTRE <span>INSTANTES</span></div><div class="tools"><button class="tool" id="sound">ÁUDIO: OFF</button><button class="tool" id="restart">RECOMEÇAR ↺</button></div></header>
+<main><section id="composition">
+  <div class="kicker" id="kicker"></div>
+  <div id="message"></div>
+  <div id="submessage"></div>
+  <div id="choices"></div>
+</section></main>
+<div id="hint">CLIQUE EM QUALQUER LUGAR PARA CONTINUAR</div><div id="scene-note">01 / NEBULOSA</div><div id="progress"></div>
+<div id="start"><div class="start-inner"><div class="start-overline">uma pequena travessia</div><h1 class="start-title">Entre<br>instantes.</h1><p class="start-copy">Algumas coisas são difíceis de dizer de uma só vez. Então, resolvi espalhá-las pelo universo.</p><button id="begin">Começar a viagem</button></div></div>
+<script>
+(() => {
+const canvas=document.getElementById('universe'),ctx=canvas.getContext('2d');
+let W,H,dpr,particles=[],scene='nebula',targetScene='nebula',t=0,mouse={x:.5,y:.5},audioOn=false,audioCtx=null,osc=null,gain=null;
+const $=id=>document.getElementById(id);
+const message=$('message'),sub=$('submessage'),kicker=$('kicker'),choices=$('choices'),hint=$('hint'),note=$('scene-note'),progress=$('progress');
+const scenes=['nebula','neural','mosaic','time','calm','dream'];
+const labels={nebula:'01 / NEBULOSA',neural:'02 / SINAPSES',mosaic:'03 / MOSAICO',time:'04 / TEMPO',calm:'05 / CALMARIA',dream:'06 / PLANOS'};
+const palettes={
+ nebula:[[37,42,100],[91,51,125],[34,91,116]],
+ neural:[[13,75,111],[80,42,135],[28,135,153]],
+ mosaic:[[127,66,91],[177,119,76],[61,105,119]],
+ time:[[49,57,112],[116,70,133],[36,104,121]],
+ calm:[[115,91,105],[87,111,119],[173,137,105]],
+ dream:[[79,67,120],[123,91,109],[62,111,119]]
+};
+function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);particles=Array.from({length:Math.min(230,Math.floor(W*H/5500))},()=>({x:Math.random()*W,y:Math.random()*H,z:Math.random(),r:Math.random()*1.6+.25,p:Math.random()*Math.PI*2,s:Math.random()*.25+.04}));}
+addEventListener('resize',resize);resize();
+function rgba(c,a){return `rgba(${c[0]},${c[1]},${c[2]},${a})`}
+function drawNebula(now){
+ const pal=palettes[scene]||palettes.nebula;ctx.clearRect(0,0,W,H);
+ const speed=scene==='neural'?2.4:scene==='calm'?.35:scene==='time'?1.15:1;
+ // atmospheric color fields
+ for(let i=0;i<3;i++){
+  const x=W*(.25+i*.27)+Math.sin(now*.00018*speed+i*2)*W*.13+(mouse.x-.5)*30;
+  const y=H*(.38+(i%2)*.25)+Math.cos(now*.00015*speed+i)*H*.12+(mouse.y-.5)*25;
+  const radius=Math.max(W,H)*(.36+i*.08);
+  const g=ctx.createRadialGradient(x,y,0,x,y,radius);
+  g.addColorStop(0,rgba(pal[i],scene==='calm'?.16:.24));g.addColorStop(.45,rgba(pal[i],.075));g.addColorStop(1,'rgba(4,6,17,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ }
+ // stars and drifting dust
+ for(const p of particles){
+  p.y-=p.s*speed*(scene==='neural'?1.8:1);p.x+=Math.sin(now*.0002+p.p)*.12*speed;
+  if(p.y< -5){p.y=H+5;p.x=Math.random()*W}
+  const tw=.35+.65*(.5+.5*Math.sin(now*.001+p.p));
+  ctx.beginPath();ctx.arc(p.x,p.y,p.r*(.7+p.z),0,Math.PI*2);ctx.fillStyle=`rgba(231,226,255,${tw*(.25+p.z*.55)})`;ctx.fill();
+ }
+ if(scene==='neural')drawNeural(now);
+ if(scene==='mosaic')drawMosaic(now);
+ if(scene==='time')drawTime(now);
+ if(scene==='dream')drawDream(now);
+ requestAnimationFrame(drawNebula);
+}
+function drawNeural(now){
+ const pts=particles.filter(p=>p.z>.38).slice(0,85),max=125;
+ ctx.lineWidth=.7;
+ for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
+  const a=pts[i],b=pts[j],d=Math.hypot(a.x-b.x,a.y-b.y);
+  if(d<max){ctx.strokeStyle=`rgba(124,192,255,${(1-d/max)*.22})`;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}
+ }
+ // electric pulses travel along a few connections
+ for(let i=0;i<13;i++){const a=pts[(i*7)%pts.length],b=pts[(i*7+5)%pts.length];if(!a||!b)continue;let f=(now*.00035+i*.173)%1;ctx.beginPath();ctx.arc(a.x+(b.x-a.x)*f,a.y+(b.y-a.y)*f,2.1,0,Math.PI*2);ctx.fillStyle='rgba(196,225,255,.9)';ctx.shadowBlur=14;ctx.shadowColor='#8ad8ff';ctx.fill();ctx.shadowBlur=0}
+}
+let shards=Array.from({length:34},(_,i)=>({a:Math.random()*Math.PI*2,r:Math.random()*.42+.12,size:Math.random()*18+9,rot:Math.random()*6,offset:Math.random()*2}));
+function drawMosaic(now){
+ ctx.save();ctx.translate(W/2,H/2);const scale=Math.min(W,H)*.42;
+ shards.forEach((s,i)=>{const pulse=Math.sin(now*.00035+s.offset)*.035;const r=(s.r+pulse)*scale;const x=Math.cos(s.a)*r,y=Math.sin(s.a)*r;
+  ctx.save();ctx.translate(x,y);ctx.rotate(s.rot+now*.00006*(i%2?1:-1));ctx.beginPath();
+  const n= i%3===0?4: i%3===1?3:5;for(let k=0;k<n;k++){let an=k*Math.PI*2/n;let rr=s.size*(k%2?.72:1);k?ctx.lineTo(Math.cos(an)*rr,Math.sin(an)*rr):ctx.moveTo(Math.cos(an)*rr,Math.sin(an)*rr)}ctx.closePath();
+  const c=palettes.mosaic[i%3];ctx.fillStyle=rgba(c,.16);ctx.strokeStyle=rgba([224,201,186],.32);ctx.lineWidth=1;ctx.fill();ctx.stroke();ctx.restore()});
+ ctx.restore();
+}
+function drawTime(now){
+ ctx.save();ctx.translate(W/2,H/2);
+ for(let j=0;j<7;j++){ctx.beginPath();for(let i=0;i<=240;i++){let a=i/240*Math.PI*2;let r=Math.min(W,H)*(.12+j*.048)+Math.sin(a*3+now*.00025+j)*18;let x=Math.cos(a)*r*(1+.18*Math.sin(now*.0002+j)),y=Math.sin(a)*r*.55;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.strokeStyle=`rgba(${130+j*9},${145-j*3},${210+j*4},${.12+j*.018})`;ctx.lineWidth=1;ctx.stroke()}
+ ctx.restore();
+}
+function drawDream(now){
+ ctx.save();ctx.translate(W/2,H/2);
+ const objects=[['✦',-.32,-.12],['◇',.25,-.24],['◌',.38,.19],['✧',-.2,.28],['△',.02,-.38],['✳',-.43,.12]];
+ objects.forEach((o,i)=>{let x=o[1]*W+Math.sin(now*.0003+i)*12,y=o[2]*H+Math.cos(now*.00025+i)*10;ctx.font=`${22+i%3*9}px serif`;ctx.fillStyle='rgba(231,214,235,.58)';ctx.fillText(o[0],x,y)});ctx.restore();
+}
+requestAnimationFrame(drawNebula);
+addEventListener('pointermove',e=>{mouse.x=e.clientX/W;mouse.y=e.clientY/H});
+let index=0,branchReturn=null,locked=false;
+const story=[
+ {scene:'nebula',tag:'ANTES DE TUDO',text:'Oiie, mozinho. Tá se divertindo com a viagem?',sub:'',opts:[['Simm!','trip_yes'],['Não muito...','trip_no'],['Mais ou menos kkkkk','trip_maybe']]},
+ {scene:'nebula',tag:'UMA PERGUNTA',text:'Faz um tempo que não escrevo uma mensagem pra você.',sub:'Sentiu falta?',opts:[['Sim, senti ❤️','miss_yes'],['Um pouquinho kkkkk','miss_little'],['Não kkkkk','miss_no']]},
+ {scene:'neural',tag:'PENSANDO SOBRE ISSO',text:'Durante esse tempo, fiquei pensando sobre isso e entendi o motivo de eu ter parado.',sub:'Para explicar, preciso voltar no tempo — para como a minha mente funcionava lá no começo.',next:true},
+ {scene:'neural',tag:'LÁ NO COMEÇO',text:'Quando começou e o porquê, eu não sei, mas você seduzia o meu olhar.',sub:'Depois, de forma intrometida, ocupou um espaço da minha mente e, insatisfeita, dominou todo o meu campo cognitivo.',next:true},
+ {scene:'neural',tag:'FEIRA NIPO',text:'A partir do dia da Feira Nipo, minha mente ficou eufórica ao sentir que um futuro juntos era possível.',sub:'Naquela época, todos os meus sentidos só apontavam para você.',next:true},
+ {scene:'neural',tag:'OS SENTIDOS NO PASSADO',text:'A minha audição queria somente ouvir teu nome e a tua voz. Meus olhos só queriam te ver.',sub:'A minha boca queria te conhecer e conhecer a tua. E a faculdade da minha mente queria navegar nos mistérios de quem é você.',next:true},
+ {scene:'neural',tag:'SINAPSES E IMPULSOS',text:'Todas as sinapses, de forma bela, transmitiam por pulsos elétricos a informação codificada que só a mente podia decodificar: o teu nome e a minha vontade de te conhecer.',sub:'Os pulsos que me moviam a querer te conhecer eram mais fortes do que todos os outros.',next:true},
+ {scene:'mosaic',tag:'AS INFINITAS CHAVES',text:'Como uma caixa fechada, exaustivamente testei as infinitas chaves, buscando nem que fosse uma fração sobre você.',sub:'E à medida que você passou a abrir as caixas por conta própria, a minha mente passou a se dedicar a amar tudo o que eu descobria.',next:true},
+ {scene:'mosaic',tag:'CADA DESCOBERTA',text:'Independente se a fração era uma dádiva, uma virtude, um dom, um gosto ou um desgosto, uma história boa ou ruim, uma mágoa, algo que considera um defeito, falhas, dificuldades ou problemas.',sub:'Cada pecinha dessas que eu descobria ia montando o mosaico que é você.',next:true},
+ {scene:'mosaic',tag:'A NATUREZA DE CADA PEÇA',text:'Assim como cada sentimento e história tem sua própria natureza, cada peça desse mosaico pode ser de um material diferente: cerâmica, metal e até papel.',sub:'Mas todos esses materiais se degradam, podem conter rachaduras, e nenhum é igual — e muito menos perfeito.',next:true},
+ {scene:'mosaic',tag:'O ESTADO DE CADA MATERIAL',text:'Além disso, o estado de cada material varia conforme as condições do ambiente: uma hora dilatam devido ao calor, outra se contraem, e o choque térmico pode acontecer e rachar partes importantes.',sub:'Isso nos define como seres humanos. E por isso sei que te amo: porque amo um belo mosaico do qual ainda faltam peças para completar e, então, eu me deslumbrar com a sua magnitude.',next:true},
+ {scene:'time',tag:'VARIÁVEIS NO UNIVERSO',text:'Uma pena que completar esse mosaico é impossível: não somos constantes no universo, mas variáveis que mudam na mesma velocidade em que pulsos elétricos viajam em nossa mente.',sub:'Não posso te apreciar como se aprecia um mosaico real, cujo significado é muito limitado e quase invariável em relação ao tempo. Você é infinita em todos os detalhes e impossível de ser representada em um mosaico.',next:true},
+ {scene:'time',tag:'PASSADO, PRESENTE E FUTURO',text:'Mesmo escrevendo uma mensagem que será entregue para o "você do futuro", escrevo com o mosaico do "você do presente" — mas a cada instante você se torna uma pessoa diferente.',sub:'Então escrevo para o você do futuro falando do você do passado. E o próprio fato de eu escrever sobre o que sinto pode alterar quem sou agora: você lerá pensando em mim do passado, pois já não serei o eu que digita cada letra.',next:true},
+ {scene:'time',tag:'A BELEZA DE AMAR',text:'Essa é a beleza de amar para mim. Essa é a beleza de te amar.',sub:'É esse anseio contínuo de descobrir cada pedaço seu que varia e se transforma no tempo, sabendo que você nunca deixa de ser um universo novo para conhecer.',next:true},
+ {scene:'calm',tag:'DEPOIS DA EUFORIA',highlight:true,text:'Percebe o quão eufórico eu estava? À medida que fui aprendendo sobre você e você foi demonstrando o afeto que sente por mim, a minha mente passou a se acalmar.',sub:'Aquele caminhão de sentimentos que a paixão trazia passou. O exagero era uma carga sentimental enorme que cada site carregava porque era o que eu sentia. Agora estou mais aliviado, porque em seus gestos sinto que me ama — e isso me conforta.',next:true},
+ {scene:'calm',tag:'GESTOS SIMPLES',text:'Até o ato de dar bom dia todos os dias, mesmo que não conversemos sobre nada, me deixa muito feliz.',sub:'Então sobre o que eu escreveria agora? Não sei kkkkkk.',next:true},
+ {scene:'calm',tag:'CURIOSIDADE',text:'Tenho coisas que queria te perguntar, mas precisamos de mais um momento daqueles pessoalmente pra isso.',sub:'Uma das coisas que tenho curiosidade é sobre como você reagiu à última mensagem.',next:true},
+ {scene:'calm',tag:'UM PEDIDO',text:'Tenho também um pedido: pergunta mais sobre mim.',sub:'Sou tímido, não sei se transpareço isso. Há momentos em que fico tímido até pra falar algo pra tu, e me dá tanta raiva de mim mesmo kkkkk.',next:true},
+ {scene:'calm',tag:'MODO GRUDENTO',text:'Sou um carrapatinho com orgulho.',sub:'Em alguns encontros e despedidas, dá vontade de dar um beijo de despedida (de forma singela) mesmo em público. Sente o mesmo?',opts:[['Sim, também sinto','kiss_yes'],['Às vezes','kiss_sometimes'],['Fico tímida','kiss_shy'],['Prefiro em particular','kiss_private']]},
+ {scene:'calm',tag:'PERDIDO NO TEXTO',text:'Afinal, sobre o que eu estava falando? Não lembro mais kkkkk.',sub:'Acho que me passei um pouco na escrita e me alonguei muito no tempo em que estou escrevendo tudo isso.',next:true},
+ {scene:'calm',tag:'O QUE NÃO MUDOU',text:'Não te amo menos por ter parado de escrever e desenvolver sites com mensagens.',sub:'Pelo contrário: por te amar ainda mais que antes e por estar com a mente mais aliviada, não encontrei mais motivos tão exagerados como aqueles para escrever.',next:true},
+ {scene:'time',tag:'FREUD E O INCONSCIENTE',text:'Em algum momento você perguntou o porquê de eu te amar e o que eu via em você. As respostas estão no meu inconsciente, de modo que somente Freud pode explicar como acessar.',sub:'Na visão de Freud, os sonhos são manifestações do inconsciente. Eu sonhava muito contigo, mas agora que muitos sonhos são realidade, parei de sonhar tanto. Talvez eu não esteja sonhando porque estou dormindo muito mal kkkkkk, mas vamos significar esse fato de forma romântica e poética porque é mais bonito kkkkk.',next:true},
+ {scene:'calm',tag:'SEMPRE MAIS PALAVRAS',text:'Cada vez que penso que terminei de escrever, encontro mais palavras para escrever.',sub:'Que vontade de conversar e perguntar tanta coisa, aaah… vou evitar fazer essas perguntas agora. Até porque eu não irei receber as respostas que você marcar aqui no site, então depois você me conta tudo kkkkk.',next:true},
+ {scene:'dream',tag:'NOSSA LISTA — FILMES RUINS',text:'Para findar, fiz uma lista de tudo que já planejamos fazer.',sub:'Filmes ruins: O Carro Assassino · O Ursinho Pooh: Sangue e Mel · Popeye: O Homem Matador · O Pneu Assassino · Ataque dos Donuts Assassinos · Camisinha Assassina · O Pinto Assassino e o Monstro de um Olho Só.',next:true},
+ {scene:'dream',tag:'FILMES, DOCS E JOGOS',text:'Documentário, animação e jogos que estão na nossa fila.',sub:'Assistir ao documentário O Dilema das Redes e ao filme do estúdio LAIKA, O Bosque Selvagem. E jogar aqueles jogos suspeitos do Roblox e It Takes Two.',next:true},
+ {scene:'dream',tag:'PROJETOS E LEITURAS',text:'Fazer um avião, ler os livros e cozinhar juntos.',sub:'Ler o livro do Tecnofeudalismo e o de Colonialismo Digital, e cozinhar os bolinhos de carne em formato de rato. São as coisas que lembro no momento — planejamos tanta coisa.',next:true},
+ {scene:'dream',tag:'FOTOS DA VIAGEM',text:'É isso que tenho para falar. Espero que esteja aproveitando a viagem — quero ver fotos!',sub:'Não é porque eu queria ter mais fotos tuas na minha galeria que estou pedindo, nunca rsrsrs. Falando nisso, poderíamos tirar mais fotos.',next:true},
+ {scene:'calm',tag:'DESPEDIDA',text:'Te amo muito.',sub:'Olha eu começando a escrever mais coisa até na despedida… Fiquei muito tempo escrevendo e tive que resumir muita coisa, espero que não tenha perdido o sentido do que eu queria transmitir. Era um textão kkk.',end:true}
+];
+function showText(item){
+ locked=!!item.opts;
+ scene=item.scene;note.textContent=labels[scene];$('veil').style.background=scene==='neural'?'radial-gradient(ellipse at 50% 48%,transparent 5%,rgba(3,5,14,.25) 68%,rgba(2,3,9,.7) 100%)':'radial-gradient(ellipse at 50% 48%,transparent 15%,rgba(3,5,14,.16) 62%,rgba(2,3,9,.72) 100%)';
+ message.classList.remove('visible');sub.classList.remove('visible');kicker.classList.remove('visible');choices.classList.remove('visible');hint.classList.remove('visible');
+ message.classList.add('leaving');
+ setTimeout(()=>{
+  kicker.textContent=item.tag||'';message.textContent=item.text;sub.textContent=item.sub||'';
+  kicker.classList.toggle('highlighted',!!item.highlight);
+  message.classList.toggle('highlighted',!!item.highlight);
+  message.classList.remove('leaving');void message.offsetWidth;
+  kicker.classList.add('visible');message.classList.add('visible');if(item.sub)sub.classList.add('visible');
+  choices.innerHTML='';
+  if(item.opts){item.opts.forEach(([label,route])=>{let b=document.createElement('button');b.className='choice';b.textContent=label;b.onclick=e=>{e.stopPropagation();respond(route)};choices.appendChild(b)});setTimeout(()=>choices.classList.add('visible'),450)}
+  else if(!item.end){
+   hint.textContent='CLIQUE EM QUALQUER LUGAR PARA CONTINUAR';
+   setTimeout(()=>hint.classList.add('visible'),900);
+  }
+  else{hint.textContent='FIM DESTA TRAVESSIA · CLIQUE PARA RECOMEÇAR';setTimeout(()=>hint.classList.add('visible'),900)}
+  progress.style.width=((index+1)/story.length*100)+'%';
+ },450);
+}
+const branches={
+ trip_yes:{scene:'nebula',tag:'QUE BOM',text:'Aí simmm!',sub:'Aproveita bastante. Depois quero ouvir todos os detalhes kkkkk.'},
+ trip_no:{scene:'nebula',tag:'Poxa…',text:'Espero que ainda apareça alguma parte boa nesses dias.',sub:'E, na próxima vez que conversarmos, quero ouvir o porquê, viu?'},
+ trip_maybe:{scene:'nebula',tag:'UM MEIO-TERMO',text:'Kkkkk espero que a viagem ainda surpreenda.',sub:'Depois você me conta o que faltou para ser melhor.'},
+ miss_yes:{scene:'nebula',tag:'EU DESCONFIAVA',text:'Kkkkk confesso que esperava essa resposta.',sub:'Também senti falta de escrever.'},
+ miss_little:{scene:'nebula',tag:'SÓ UM POUQUINHO?',text:'Vou fingir que acredito nesse “pouquinho” kkkkk.'},
+ miss_no:{scene:'nebula',tag:'AUDACIOSA',text:'Kkkkk tudo bem, vou superar essa informação.',sub:'Mas vou continuar escrevendo quando tiver vontade.'},
+ kiss_yes:{scene:'calm',tag:'ANOTADO',text:'Então não era só coisa da minha cabeça kkkkk.',sub:'Vou guardar essa informação com carinho.'},
+ kiss_sometimes:{scene:'calm',tag:'ÀS VEZES',text:'Justo. Acho que também depende do momento.',sub:'Gosto de saber como você se sente.'},
+ kiss_shy:{scene:'calm',tag:'EU ENTENDO',text:'Também fico tímido, olha a situação kkkkk.',sub:'Acho bonito quando acontece naturalmente.'},
+ kiss_private:{scene:'calm',tag:'COMBINADO',text:'Vou respeitar isso, claro.',sub:'O importante é que seja confortável para nós dois.'}
+};
+function respond(route){
+ const b=branches[route];if(!b)return;
+ locked=true;choices.classList.remove('visible');hint.classList.remove('visible');
+ showText({...b,next:true});
+ // branch response advances to the next main message
+ branchReturn=index+1;
+ setTimeout(()=>{locked=false;hint.classList.add('visible')},1800);
+}
+function advance(){
+ if($('start').classList.contains('hide')===false)return;
+ if(locked)return;
+ if(index>=story.length-1){index=0;showText(story[index]);return}
+ index++;showText(story[index]);
+}
+function start(){ $('start').classList.add('hide');index=0;showText(story[0]); }
+$('begin').addEventListener('click',start);
+document.addEventListener('click',e=>{
+ if(e.target.closest('button'))return;
+ if(!$('start').classList.contains('hide'))return;
+ if(locked)return;
+ advance();
+});
+$('restart').addEventListener('click',()=>{index=0;locked=false;showText(story[0])});
+$('sound').addEventListener('click',()=>{
+ audioOn=!audioOn;$('sound').textContent='ÁUDIO: '+(audioOn?'ON':'OFF');
+ if(audioOn){
+  try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();audioCtx.resume();osc=audioCtx.createOscillator();gain=audioCtx.createGain();osc.type='sine';osc.frequency.value=55;gain.gain.value=.012;osc.connect(gain);gain.connect(audioCtx.destination);osc.start()}
+  catch(e){audioOn=false;$('sound').textContent='ÁUDIO: OFF'}
+ }else if(osc){gain.gain.setTargetAtTime(0,audioCtx.currentTime,.2);osc.stop(audioCtx.currentTime+1);osc=null}
+});
+})();
+</script>
+</body>
+</html>
